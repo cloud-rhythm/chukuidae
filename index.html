@@ -318,8 +318,9 @@
   // ── 상태 ──
   let guests = JSON.parse(localStorage.getItem('chukuidae') || '[]');
   let mealVal = 0, giftVal = 0;
-  let stockTotal = { meal: 0, gift: 0 };
-  let stockSet   = { meal: false, gift: false };
+  let stockSaved = JSON.parse(localStorage.getItem('chukuidae_stock') || '{"meal":0,"gift":0,"mealSet":false,"giftSet":false}');
+  let stockTotal = { meal: stockSaved.meal, gift: stockSaved.gift };
+  let stockSet   = { meal: stockSaved.mealSet, gift: stockSaved.giftSet };
   let editingId  = null, editMeal = 0, editGift = 0;
 
   const CHOSUNG = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
@@ -338,6 +339,7 @@
 
   function fmt(n) { return n.toLocaleString('ko-KR') + '원'; }
   function save() { localStorage.setItem('chukuidae', JSON.stringify(guests)); }
+  function saveStock() { localStorage.setItem('chukuidae_stock', JSON.stringify({meal:stockTotal.meal,gift:stockTotal.gift,mealSet:stockSet.meal,giftSet:stockSet.gift})); }
 
   function getUsed() {
     return {
@@ -352,6 +354,7 @@
     if (val <= 0) { alert('수량을 입력해주세요.'); return; }
     stockTotal[type] = val;
     stockSet[type] = true;
+    saveStock();
     document.getElementById(type+'StockInp').style.display = 'none';
     document.getElementById(type+'ConfirmBtn').style.display = 'none';
     const hKey = 'h' + type.charAt(0).toUpperCase() + type.slice(1);
@@ -378,6 +381,7 @@
     document.getElementById(type+'AddConfirmBtn').style.display = 'none';
     document.getElementById(type+'AddBtn').style.display = '';
     document.getElementById(type+'EditBtn').style.display = '';
+    saveStock();
     updateStock();
   }
 
@@ -393,6 +397,7 @@
     document.getElementById(type+'AddConfirmBtn').style.display = 'none';
     document.getElementById(type+'EditBtn').style.display = 'none';
     stockSet[type] = false;
+    saveStock();
     updateStock();
   }
 
@@ -668,6 +673,19 @@
     });
 
     render();
+    updateStock();
+
+    // 저장된 재고 UI 복원
+    ['meal','gift'].forEach(type => {
+      if (stockSet[type]) {
+        document.getElementById(type+'StockInp').style.display = 'none';
+        document.getElementById(type+'ConfirmBtn').style.display = 'none';
+        const hKey = 'h' + type.charAt(0).toUpperCase() + type.slice(1);
+        document.getElementById(hKey).style.display = '';
+        document.getElementById(type+'AddBtn').style.display = '';
+        document.getElementById(type+'EditBtn').style.display = '';
+      }
+    });
     updateStock();
   });
 })();
